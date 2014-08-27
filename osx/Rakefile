@@ -1,0 +1,40 @@
+PROJECT_SCHEME = 'MY_APP' # Your Project scheme for building ex MyApp
+PROJECT_NAME = 'MY_APP.xcodeproj' # Your Project file name ex. MyApp.xcodeproj
+WORKSPACE_NAME = 'MY_APP.xcworkspace' # Your workspace file name ex. MyApp.xcworkspace
+CONFIGURATION = 'Release' # The build configuration to use
+INFOPLIST_PATH = 'FOO/MY_APP-Info.plist' # Your info plist file path
+
+desc 'Build App'
+task :buildapp do
+  puts "Attempting to build App..."
+  sh "xcodebuild clean build -workspace #{WORKSPACE_NAME} -scheme #{PROJECT_SCHEME} | xcpretty -c"
+end
+
+desc 'Run Unit Tests'
+task :test => ['buildapp'] do
+  puts "Attempting to build App..."
+  sh "xcodebuild test -workspace #{WORKSPACE_NAME} -scheme #{PROJECT_SCHEME} | xcpretty -c --test"
+end
+
+desc "Rev the build numbers in a project's plist"
+task :rev do
+  puts "Attempting to update #{INFOPLIST_PATH} build version..."
+  oldVersion = `/usr/libexec/PlistBuddy -c "Print CFBundleVersion" #{INFOPLIST_PATH}`
+  puts "The old version: #{oldVersion}"
+
+  newVersion = Integer(oldVersion) + 1
+  `/usr/libexec/PlistBuddy -c "Set :CFBundleVersion #{newVersion}" #{INFOPLIST_PATH}`
+  puts "The new version: #{newVersion}"
+end
+
+desc "Commit git changes"
+task :push do
+  version = `/usr/libexec/PlistBuddy -c "Print CFBundleVersion" #{INFOPLIST_PATH}`
+  sh "git add #{INFOPLIST_PATH}"
+  sh "git commit -m 'Release #{version}'"
+  sh "git tag -a b#{version}"
+  sh "git push origin master --tags"
+end
+
+desc 'Deploy Release Build'
+task :release => ['rev','test']
