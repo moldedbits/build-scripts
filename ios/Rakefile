@@ -6,7 +6,6 @@ INFOPLIST_PATH = 'FOO/MYPROJECT-Info.plist' # Your info plist file path
 API_TOKEN = 'MY_API_TOKEN' # Your TestFlight API Token
 TEAM_TOKEN = 'MY_API_TOKEN' # Your TestFlight Team Token
 RELEASE_LIST = 'Internal - Always Release' # TestFlight list of people you want to notify for release
-RELEASE_NOTES = 'EVERYTHING IS AWESOME!' # Your TestFlight release notes
 
 desc 'Build IPA'
 task :buildipa do
@@ -39,6 +38,16 @@ end
 desc 'Deploy Release Build to TestFlight'
 task :release => ['rev','buildipa'] do
   puts "Attempting to release build to TestFlight..."
-  sh "ipa distribute:testflight --api_token #{API_TOKEN} --team_token #{TEAM_TOKEN} --lists #{RELEASE_LIST} --notify --notes '#{RELEASE_NOTES}' "
+  puts "Release notes for release:"
+  puts release_notes
+  sh "ipa distribute:testflight --api_token #{API_TOKEN} --team_token #{TEAM_TOKEN} --lists #{RELEASE_LIST} --notify --notes '#{release_notes}' "
   Rake::Task["push"].execute
+end
+
+def release_notes
+  begin
+    IO.read('RELEASE_NOTES.md')
+  rescue
+    'Add RELEASE_NOTES.md at project root to post release notes.'
+  end
 end
