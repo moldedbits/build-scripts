@@ -30,6 +30,21 @@ task :push do
   sh "git push origin master --tags"
 end
 
+desc "Generates HTML documentation using appledoc"
+task :docs do
+  system <<-EOS
+    appledoc \\
+      --project-name #{@settings[:app_name]} \\
+      --project-company #{@settings[:company]} \\
+      --company-id #{@settings[:company_id]} \\
+      --output docs \\
+      --create-html \\
+      --no-create-docset \\
+      --ignore Pods \\
+      --keep-intermediate-files .
+  EOS
+end
+
 desc 'Deploy Release Build to TestFlight'
 task :release => ['rev','buildipa'] do
   puts "Attempting to release build to TestFlight..."

@@ -1,4 +1,7 @@
 {
+:app_name => "MyApp"							# The name of your app (For appledocs)
+:company =>	"ChaiOne"						# Company name
+:company_id => "com.chaione"					# Reverse notation bundle identifier
 :workspace  => "MYWORKSPACE.xcworkspace",	# Your workspace file name ex. MyApp.xcworkspace
 :project => "MYAPP.xcodeproj", 				# Your Project scheme for building ex MyApp
 :scheme      => "MY_PROJECT_SCHEME",			# Your Project scheme for building ex MyApp
