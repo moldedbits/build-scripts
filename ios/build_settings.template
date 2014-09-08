@@ -1,0 +1,11 @@
+{
+:workspace  => "MYWORKSPACE.xcworkspace",	# Your workspace file name ex. MyApp.xcworkspace
+:project => "MYAPP.xcodeproj", 				# Your Project scheme for building ex MyApp
+:scheme      => "MY_PROJECT_SCHEME",			# Your Project scheme for building ex MyApp
+:configuration => "Release",					# The build configuration to use
+:info_plist => "FOO/MYPROJECT-Info.plist", 	# Your info plist file path
+:api_token => 'MY_API_TOKEN', 				# Your TestFlight API Token
+:team_token => 'MY_API_TOKEN',				# Your TestFlight Team Token
+:release_list => 'Internal - Always Release' # TestFlight list of people you want to notify for release
+:release_notes => 'EVERYTHING IS AWESOME!' 	# Your TestFlight release notes
+}

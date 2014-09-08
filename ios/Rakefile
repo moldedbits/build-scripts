@@ -1,37 +1,32 @@
-PROJECT_SCHEME = 'MY_PROJECT_SCHEME' # Your Project scheme for building ex MyApp
-PROJECT_NAME = 'MYAPP.xcodeproj' # Your Project file name ex. MyApp.xcodeproj
-WORKSPACE_NAME = 'MYWORKSPACE.xcworkspace' # Your workspace file name ex. MyApp.xcworkspace
-CONFIGURATION = 'Release' # The build configuration to use
-INFOPLIST_PATH = 'FOO/MYPROJECT-Info.plist' # Your info plist file path
-API_TOKEN = 'MY_API_TOKEN' # Your TestFlight API Token
-TEAM_TOKEN = 'MY_API_TOKEN' # Your TestFlight Team Token
-RELEASE_LIST = 'Internal - Always Release' # TestFlight list of people you want to notify for release
+file = File.open('build_settings')
+contents = file.read
+@settings = eval(contents)
 
 desc 'Build IPA'
 task :buildipa do
   puts "Attempting to build IPA..."
   sh "rm -rf *.ipa"
   sh "rm -rf *.app.dSYM.zip"
-  sh "ipa build --scheme #{PROJECT_SCHEME} --workspace #{WORKSPACE_NAME} --project #{PROJECT_NAME} --configuration #{CONFIGURATION} --clean /tmp"
+  sh "ipa build --scheme #{@settings[:scheme]} --workspace #{@settings[:workspace]} --project #{@settings[:project]} --configuration #{@settings[:configuration]} --clean /tmp"
 end
 
 desc "Rev the build numbers in a project's plist"
 task :rev do
-  puts "Attempting to update #{INFOPLIST_PATH} build version..."
-  oldVersion = `/usr/libexec/PlistBuddy -c "Print CFBundleVersion" #{INFOPLIST_PATH}`
+  puts "Attempting to update #{@settings[:info_plist]} build version..."
+  oldVersion = `/usr/libexec/PlistBuddy -c "Print CFBundleVersion" #{@settings[:info_plist]}`.chomp
   puts "The old version: #{oldVersion}"
 
   newVersion = Integer(oldVersion) + 1
-  `/usr/libexec/PlistBuddy -c "Set :CFBundleVersion #{newVersion}" #{INFOPLIST_PATH}`
+  `/usr/libexec/PlistBuddy -c "Set :CFBundleVersion #{newVersion}" #{@settings[:info_plist]}`
   puts "The new version: #{newVersion}"
 end
 
 desc "Commit git changes"
 task :push do
-  version = `/usr/libexec/PlistBuddy -c "Print CFBundleVersion" #{INFOPLIST_PATH}`
-  sh "git add #{INFOPLIST_PATH}"
+  version = `/usr/libexec/PlistBuddy -c "Print CFBundleVersion" #{@settings[:info_plist]}`.chomp
+  sh "git add #{@settings[:info_plist]}"
   sh "git commit -m 'Release #{version}'"
-  sh "git tag -a b#{version}"
+  sh "git tag -a b#{version} -m 'Tag #{version}'"
   sh "git push origin master --tags"
 end
 
@@ -40,7 +35,7 @@ task :release => ['rev','buildipa'] do
   puts "Attempting to release build to TestFlight..."
   puts "Release notes for release:"
   puts release_notes
-  sh "ipa distribute:testflight --api_token #{API_TOKEN} --team_token #{TEAM_TOKEN} --lists #{RELEASE_LIST} --notify --notes '#{release_notes}' "
+  sh "ipa distribute:testflight --api_token #{@settings[:api_token]} --team_token #{@settings[:team_token]} --lists #{@settings[:release_list]} --notify --notes '#{release_notes}' "
   Rake::Task["push"].execute
 end
 
