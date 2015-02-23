@@ -1,14 +1,10 @@
 {
-:app_name => "MyApp"							# The name of your app (For appledocs)
-:company =>	"ChaiOne"						# Company name
-:company_id => "com.chaione"					# Reverse notation bundle identifier
+:app_name => "MyApp",							# The name of your app (For appledocs)
+:company =>	"ChaiOne",						# Company name
+:company_id => "com.chaione",					# Reverse notation bundle identifier
+# You need either a workspace file or a project file
 :workspace  => "MYWORKSPACE.xcworkspace",	# Your workspace file name ex. MyApp.xcworkspace
-:project => "MYAPP.xcodeproj", 				# Your Project scheme for building ex MyApp
+:project => "MYAPP.xcodeproj", 				# Your Project file for building ex MyApp.xcproject
 :scheme      => "MY_PROJECT_SCHEME",			# Your Project scheme for building ex MyApp
-:configuration => "Release",					# The build configuration to use
-:info_plist => "FOO/MYPROJECT-Info.plist", 	# Your info plist file path
-:api_token => 'MY_API_TOKEN', 				# Your TestFlight API Token
-:team_token => 'MY_API_TOKEN',				# Your TestFlight Team Token
-:release_list => 'Internal - Always Release' # TestFlight list of people you want to notify for release
-:release_notes => 'EVERYTHING IS AWESOME!' 	# Your TestFlight release notes
+:configuration => "Release"					# The build configuration to use
 }
