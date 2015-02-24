@@ -8,7 +8,7 @@
 git=`sh /etc/profile; which git`
 appBuild=`"$git" rev-list --all |wc -l`
 branchName=`"$git" rev-parse --abbrev-ref HEAD`
-if [ $branchName = "master" ]; then
+if [ $branchName = "master" ] || [ $branchName = "dev" ]; then
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $appBuild" "${TARGET_BUILD_DIR}/${INFOPLIST_PATH}"
 else
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $appBuild-$branchName" "${TARGET_BUILD_DIR}/${INFOPLIST_PATH}"
