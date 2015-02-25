@@ -1,0 +1,3 @@
+android/gradle-plugin/plugin/.gradle/*
+android/gradle-plugin/plugin/build/*
+android/gradle-plugin/repo
