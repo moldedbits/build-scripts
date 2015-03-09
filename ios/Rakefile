@@ -8,7 +8,7 @@ end
 
 desc 'Show version of the script'
 task :showversion do
-  puts "1.2"
+  puts "1.1.1"
 end
 
 desc 'Build IPA'
