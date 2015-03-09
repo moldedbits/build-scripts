@@ -1,14 +1,18 @@
-file = File.open('build_settings')
-contents = file.read
-@settings = eval(contents)
+
+desc 'Load Build Settings'
+task :loadsettings do
+  file = File.open('build_settings')
+  contents = file.read
+  @settings = eval(contents)
+end
 
 desc 'Show version of the script'
 task :showversion do
-  puts "1.1"
+  puts "1.2"
 end
 
 desc 'Build IPA'
-task :buildipa do
+task :buildipa => ['loadsettings'] do
   puts "Attempting to build IPA..."
   sh "rm -rf *.ipa"
   sh "rm -rf *.app.dSYM.zip"
@@ -42,19 +46,16 @@ def release_notes
   end
 end
 
-desc 'Deploy build to C1 App Store'
-task :internal do
+desc 'Check S3 Credentials'
+task :checkS3 do
   puts "Checking for S3 Credentials"
-  s3_access_key = ENV['AWS_ACCESS_KEY_ID']
-  puts "Access Key Missing" unless s3_access_key
-  s3_secret = ENV['AWS_SECRET_ACCESS_KEY']
-  puts "Secret Key Missing" unless s3_secret
-  if s3_access_key && s3_secret then
-    Rake::Task['buildipa'].invoke
-    puts "Attempt to release build to C1 App Store"
-    sh "ipa distribute:s3 -b chaione-app-store/_inbox"
-  else
-    puts "Upload aborted"
-  end
+  fail "ERROR: AWS_ACCESS_KEY_ID Not Set" unless ENV['AWS_ACCESS_KEY_ID']
+  fail "ERROR: AWS_SECRET_ACCESS_KEY Not Set" unless ENV['AWS_SECRET_ACCESS_KEY']
+end
+
+desc 'Deploy build to C1 App Store'
+task :internal => ['checkS3', 'buildipa'] do
+  puts "Attempt to release build to C1 App Store"
+  sh "ipa distribute:s3 -b chaione-app-store/_inbox"
 end
 
