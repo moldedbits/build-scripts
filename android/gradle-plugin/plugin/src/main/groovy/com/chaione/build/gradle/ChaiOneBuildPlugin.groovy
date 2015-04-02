@@ -43,7 +43,20 @@ class ChaiOneBuildPlugin implements Plugin {
 
   def getVersionCode() {
     def result = Integer.parseInt(execShellCommand('git', ['rev-list', '--count', 'HEAD']))
+    incrementVersionCode(result)
     result > 0 ? result : 1
+  }
+
+  def incrementVersionCode(versionCode) {
+    println "Writing to build file: " + project.getBuildFile()
+    def myFile = new File("${project.getBuildFile()}")
+    def fileText = myFile.text
+    def pattern = ~"versionCode\\s+\\d+"
+    def matcher = pattern.matcher(fileText)
+    matcher.find()
+    def versionCodeContent = matcher.replaceAll("versionCode " + versionCode)
+    myFile.write(versionCodeContent)
+    println "Saved versionCode " + versionCode
   }
 
   def performBuild(variantName) {
