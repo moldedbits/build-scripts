@@ -14,30 +14,21 @@ class ChaiOneBuildPlugin implements Plugin {
 
     project.android.applicationVariants.all { variant ->
       project.task("internalAppStoreDeploy${variant.name.capitalize()}", description: "Deploys a ${variant.name} build to the ChaiOne internal app store.") << {
-        def versionName = getVersionName()
-        println "\nChaiOne Gradle build plugin activate!\n   Version Name: ${versionName}\n   Version Code: ${versionCode}"
-
         def config = project.android.defaultConfig
-        config.versionName = versionName
+        def oldVersionName = config.versionName
+        def newVersionName = getNewVersionName(oldVersionName)
+        println "\nChaiOne Gradle build plugin activate!\n   Version Name: ${versionName}\n   Version Code: ${versionCode}"
+        
+        config.versionName = newVersionName
         config.versionCode = versionCode
-
         performBuild(variant.name)
 
+        // Break execution here
+        // throw new GradleException('error occurred')
+        
         uploadApk(variant)
         uploadReleaseNotes(variant)
       }
-    }
-  }
-
-  def getVersionName() {
-    def currentName = project.android.defaultConfig.versionName
-    def branch = execShellCommand('git', ['rev-parse', '--abbrev-ref', 'HEAD'])
-
-    if(branch == "master" || branch == "dev") {
-      currentName
-    }
-    else {
-      "${currentName}-${branch}".toString()
     }
   }
 
@@ -51,12 +42,63 @@ class ChaiOneBuildPlugin implements Plugin {
     println "Writing to build file: " + project.getBuildFile()
     def myFile = new File("${project.getBuildFile()}")
     def fileText = myFile.text
+
+    // Match versionCode followed by space followed by decimal number
     def pattern = ~"versionCode\\s+\\d+"
     def matcher = pattern.matcher(fileText)
     matcher.find()
+
     def versionCodeContent = matcher.replaceAll("versionCode " + versionCode)
     myFile.write(versionCodeContent)
     println "Saved versionCode " + versionCode
+  }
+
+  /**
+   * The base value for the versionName is read from the android.defaultConfig section of the build.gradle file. 
+   * If the current Git branch is something other than master or dev, then the branch name will be appended, 
+   * resulting in a version name such as 1.0.0-feature-branch. 
+   *
+   * @param currentName The current versionName in buld.gradle.
+   */
+  def getNewVersionName(currentName) {
+    println "Previous versionName was " + currentName
+
+    def result
+
+    // Get a string that includes a dash followed by any characters
+    def pattern2 = ~"-.*"
+    // Subtract above string from the version name
+    def numericDecimal = currentName - pattern2
+
+    def branch = execShellCommand('git', ['rev-parse', '--abbrev-ref', 'HEAD'])
+    if(branch == "master" || branch == "dev") {
+      result = numericDecimal
+    }
+    else {
+      result = "${numericDecimal}-${branch}".toString()
+    }
+
+    saveVersionName(result)
+    
+    // Return the resulting versionName
+    result
+  }
+
+  /**
+   * Save the versionName in project's buld.gradle file.
+   */
+  def saveVersionName(newVersionName) {
+     def myFile = new File("${project.getBuildFile()}")
+     def fileText = myFile.text
+     
+     // Match versionName followed by space followed by any number of characters
+     def pattern = ~"versionName\\s+.+"
+     def matcher = pattern.matcher(fileText)
+     matcher.find()
+
+     def versionNameContent = matcher.replaceAll("versionName " + "\"" + newVersionName + "\"")
+     myFile.write(versionNameContent)
+     println "Saved new versionName as " + newVersionName
   }
 
   def performBuild(variantName) {
