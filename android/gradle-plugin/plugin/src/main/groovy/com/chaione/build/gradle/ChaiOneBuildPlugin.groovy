@@ -14,14 +14,18 @@ class ChaiOneBuildPlugin implements Plugin {
 
     project.android.applicationVariants.all { variant ->
       project.task("internalAppStoreDeploy${variant.name.capitalize()}", description: "Deploys a ${variant.name} build to the ChaiOne internal app store.") << {
-        def versionName = getVersionName(project.android.defaultConfig.versionName)
-        println "\nChaiOne Gradle build plugin activate!\n   Version Name: ${versionName}\n   Version Code: ${versionCode}"
-
         def config = project.android.defaultConfig
-        config.versionName = versionName
+        def oldVersionName = config.versionName
+        def newVersionName = getNewVersionName(oldVersionName)
+        println "\nChaiOne Gradle build plugin activate!\n   Version Name: ${versionName}\n   Version Code: ${versionCode}"
+        
+        config.versionName = newVersionName
         config.versionCode = versionCode
         performBuild(variant.name)
 
+        // Break execution here
+        // throw new GradleException('error occurred')
+        
         uploadApk(variant)
         uploadReleaseNotes(variant)
       }
@@ -53,16 +57,25 @@ class ChaiOneBuildPlugin implements Plugin {
    * The base value for the versionName is read from the android.defaultConfig section of the build.gradle file. 
    * If the current Git branch is something other than master or dev, then the branch name will be appended, 
    * resulting in a version name such as 1.0.0-feature-branch. 
+   *
+   * @param currentName The current versionName in buld.gradle.
    */
-  def getVersionName(currentName) {
+  def getNewVersionName(currentName) {
+    println "Previous versionName was " + currentName
+
     def result
+
+    // Get a string that includes a dash followed by any characters
+    def pattern2 = ~"-.*"
+    // Subtract above string from the version name
+    def numericDecimal = currentName - pattern2
+
     def branch = execShellCommand('git', ['rev-parse', '--abbrev-ref', 'HEAD'])
-    println "branch: " + branch
     if(branch == "master" || branch == "dev") {
-      result = currentName
+      result = numericDecimal
     }
     else {
-      result = "${currentName}-${branch}".toString()
+      result = "${numericDecimal}-${branch}".toString()
     }
 
     saveVersionName(result)
@@ -74,8 +87,7 @@ class ChaiOneBuildPlugin implements Plugin {
   /**
    * Save the versionName in project's buld.gradle file.
    */
-  def saveVersionName(versionName) {
-     println "Writing to build file: " + project.getBuildFile()
+  def saveVersionName(newVersionName) {
      def myFile = new File("${project.getBuildFile()}")
      def fileText = myFile.text
      
@@ -84,9 +96,9 @@ class ChaiOneBuildPlugin implements Plugin {
      def matcher = pattern.matcher(fileText)
      matcher.find()
 
-     def versionNameContent = matcher.replaceAll("versionName " + "\"" + versionName + "\"")
+     def versionNameContent = matcher.replaceAll("versionName " + "\"" + newVersionName + "\"")
      myFile.write(versionNameContent)
-     println "Saved versionName " + versionName
+     println "Saved new versionName as " + newVersionName
   }
 
   def performBuild(variantName) {
