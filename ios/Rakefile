@@ -57,5 +57,7 @@ desc 'Deploy build to C1 App Store'
 task :internal => ['checkS3', 'buildipa'] do
   puts "Attempt to release build to C1 App Store"
   sh "ipa distribute:s3 -b chaione-app-store/_inbox"
+  curl -X GET 'https://appstore.chaione.com/api/update' >> /dev/null
+  puts "Successfully published the release build to C1 App Store"
 end
 
