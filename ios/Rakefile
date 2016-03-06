@@ -1,4 +1,4 @@
-
+#upload to ChaiOne app Store
 desc 'Load Build Settings'
 task :loadsettings do
   file = File.open('build_settings')
@@ -60,4 +60,3 @@ task :internal => ['checkS3', 'buildipa'] do
   `curl -X GET 'https://appstore.chaione.com/api/update' >> /dev/null`
   puts "Successfully published the release build to C1 App Store"
 end
-
